@@ -48,8 +48,7 @@ public class Employee {
         return Message;
     }
 
-
-    public void searchEmployee() {
+    public void searchEmployee(Connection conn) {
 
         jobs = new ArrayList<String>();
 
@@ -63,13 +62,11 @@ public class Employee {
                 " and t.from_date >=" + from_date +
                 " and t.to_date<=" + to_date;
 
-        String connectionUrl = "jdbc:mysql://localhost:3306/employees";
-
         try (
-                Connection conn = DriverManager.getConnection(connectionUrl, "root", "123");
                 PreparedStatement ps = conn.prepareStatement(Query);
 
                 ResultSet rs = ps.executeQuery()) {
+
             System.out.print("Execution is finished \n");
 
             ResultSetMetaData rsmd = rs.getMetaData();
