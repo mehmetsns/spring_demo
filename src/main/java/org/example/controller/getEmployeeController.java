@@ -35,15 +35,30 @@ public class getEmployeeController {
     @RequestMapping(method = RequestMethod.GET, value = "/employee/search")
 
     @ResponseBody()
-    public Employee searchEmployee(@RequestBody Employee employee) {
+    public SearchEmployee searchEmployee(@RequestBody SearchEmployee employee) {
 
         if (!isConnect)
             ConnectDatabase();
 
-        employee.searchEmployee(conn);
+        employee.search(conn);
 
-        return employee;
+      return employee;
     }
+
+
+    @RequestMapping(method = RequestMethod.POST, value = "/employee/search")
+
+    @ResponseBody()
+    public String registerEmployee(@RequestBody RegisterEmployee employee) {
+
+        if (!isConnect)
+            ConnectDatabase();
+
+        employee.register(conn);
+
+        return employee._getAddingMessage();
+    }
+
 
 
 }

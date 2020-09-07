@@ -4,13 +4,14 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Employee {
+public class SearchEmployee {
 
     int personel_id;
     String start_date;
     String end_date;
     List<String> jobs;
     String Message;
+
 
     public void setPersonel_id(int personel_id) {
         this.personel_id = personel_id;
@@ -48,7 +49,7 @@ public class Employee {
         return Message;
     }
 
-    public void searchEmployee(Connection conn) {
+    public void search(Connection conn) {
 
         jobs = new ArrayList<String>();
 
@@ -102,6 +103,5 @@ public class Employee {
 
 
     }
-
 
 }
