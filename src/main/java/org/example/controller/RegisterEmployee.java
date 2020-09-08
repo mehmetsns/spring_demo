@@ -6,65 +6,75 @@ import java.sql.SQLException;
 
 public class RegisterEmployee {
 
-    int personel_id;
-    String birth_date;
-    String first_name;
-    String last_name;
+    int personelId;
+    String birthDate;
+    String firstName;
+    String lastName;
     String gender;
-    String hire_date;
-    String adding_Message;
+    String hireDate;
+    String addingMessage;
 
-    public void setPersonel_id(int personel_id) {
-        this.personel_id = personel_id;
+    public void setPersonelId(int personelId) {
+        this.personelId = personelId;
     }
 
-    public void setBirth_date(String birth_date) {
-        this.birth_date = birth_date;
+    public void setBirthDate(String birthDate) {
+        this.birthDate = birthDate;
     }
 
-    public void setFirst_name(String first_name) {
-        this.first_name = first_name;
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
     }
 
-    public void setLast_name(String last_name) {
-        this.last_name = last_name;
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public void setGender(String gender) {
         this.gender = gender;
     }
 
-    public void setHire_date(String hire_date) {
-        this.hire_date = hire_date;
+    public void setHireDate(String hireDate) {
+        this.hireDate = hireDate;
     }
 
-    public String _getAddingMessage() {
-        return adding_Message;
+    public String alertRegisterMesage() {
+        return addingMessage;
     }
 
     public void register(Connection conn) {
 
-        String Query = "insert into employees (emp_no,birth_date,first_name,last_name,gender,hire_date)\n" +
+        String query = "insert into employees (emp_no,birth_date,first_name,last_name,gender,hire_date)\n" +
                 "values (?, ?, ?, ?, ?, ?)";
 
         PreparedStatement ps = null;
 
         try {
-            ps = conn.prepareStatement(Query);
-            ps.setInt(1, personel_id);
-            ps.setDate(2, java.sql.Date.valueOf(birth_date));
-            ps.setString(3, first_name);
-            ps.setString(4, last_name);
+            ps = conn.prepareStatement(query);
+            ps.setInt(1, personelId);
+            ps.setDate(2, java.sql.Date.valueOf(birthDate));
+            ps.setString(3, firstName);
+            ps.setString(4, lastName);
             ps.setString(5, gender);
-            ps.setDate(6, java.sql.Date.valueOf(hire_date));
+            ps.setDate(6, java.sql.Date.valueOf(hireDate));
             ps.executeUpdate();
-            //ps.executeUpdate(Query);
-            adding_Message = "Personel başarıyla eklendi";
+
+            addingMessage = "Personel başarıyla eklendi";
 
         } catch (SQLException throwables) {
-            adding_Message = throwables.getMessage();
+            addingMessage = throwables.getMessage();
         }
 
+        finally{
+
+            if (ps !=null) {
+                try {
+                    ps.close();
+                } catch (SQLException throwables) {
+                    addingMessage = throwables.getMessage();
+                }
+            }
+        }
     }
 
 }

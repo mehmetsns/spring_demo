@@ -1,43 +1,46 @@
 package org.example.controller;
 
 import java.sql.*;
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class SearchEmployee {
 
-    int personel_id;
-    String start_date;
-    String end_date;
+    int personelId;
+    Date startDate;
+    Date endDate;
     List<String> jobs;
-    String Message;
+    String message;
 
+    private Logger logger = Logger.getLogger(SearchEmployee.class.getName());
 
-    public void setPersonel_id(int personel_id) {
-        this.personel_id = personel_id;
+    public void setPersonelId(int personelId) {
+        this.personelId = personelId;
     }
 
-    public void setStart_date(String start_date) {
-        this.start_date = start_date;
+    public void setStartDate(Date startDate) {
+        this.startDate = startDate;
     }
 
-    public void setEnd_date(String end_date) {
-        this.end_date = end_date;
+    public void setEndDate(Date endDate) {
+        this.endDate = endDate;
     }
 
-    public int getPersonel_id() {
+    public int getPersonelId() {
 
-        return personel_id;
+        return personelId;
     }
 
-    public String getStart_date() {
+    public Date getStartDate() {
 
-        return start_date;
+        return startDate;
     }
 
-    public String getEnd_date() {
+    public Date getEndDate() {
 
-        return end_date;
+        return endDate;
     }
 
     public List<String> getJobs() {
@@ -46,59 +49,57 @@ public class SearchEmployee {
     }
 
     public String getMessage() {
-        return Message;
+        return message;
     }
 
     public void search(Connection conn) {
 
-        jobs = new ArrayList<String>();
+        jobs = new ArrayList<>();
 
-        String from_date = "'" + start_date + "'";
-        String to_date = "'" + end_date + "'";
-        String emp_id = Integer.toString(personel_id);
-
-        String Query = "SELECT e.emp_no,t.title,t.from_date,t.to_date\n" +
+        String query = "SELECT e.emp_no,t.title,t.from_date,t.to_date\n" +
                 "FROM employees e join titles t on e.emp_no=t.emp_no\n" +
-                "where e.emp_no=" + emp_id +
-                " and t.from_date >=" + from_date +
-                " and t.to_date<=" + to_date;
+                "where e.emp_no=?" +
+                " and t.from_date >=?"  +
+                " and t.to_date<=?";
 
-        try (
-                PreparedStatement ps = conn.prepareStatement(Query);
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            ps = conn.prepareStatement(query);
 
-                ResultSet rs = ps.executeQuery()) {
+            ps.setInt(1, personelId);
+            ps.setDate(2, startDate);
+            ps.setDate(3, endDate);
 
-            System.out.print("Execution is finished \n");
+            rs = ps.executeQuery();
 
-            ResultSetMetaData rsmd = rs.getMetaData();
-            int column_count = rsmd.getColumnCount();
-
-            for (int i = 1; i <= column_count; i++)
-                System.out.format("%-25s", rsmd.getColumnName(i));
-            // System.out.print("\t" + rsmd.getColumnName(i));
+            logger.info("Sql Execution is finished");
 
             while (rs.next()) {
-
                 jobs.add(rs.getString(2));
-
-                System.out.println("");
-                for (int i = 1; i <= column_count; i++) {
-                    String columnValue = rs.getString(i);
-                    System.out.format("%-25s", columnValue);
-                }
-
-
             }
 
-            if (jobs.size() > 0) {
-                Message = "Personel Bulundu";
+            if (!jobs.isEmpty()) {
+                message = "Personel Bulundu";
             } else
-                Message = "Arama kriterlerine uyan bir personel yok";
+                message = "Arama kriterlerine uyan bir personel yok";
 
 
         } catch (SQLException e) {
-            Message = "Sorguda hata var";
+            message = "Sorguda hata var";
             // handle the exception
+        } finally {
+            try {
+               if(ps !=null) ps.close();
+            } catch (SQLException e) {
+                message=e.getMessage();
+            }
+
+            try {
+               if(rs!=null) rs.close();
+            } catch (SQLException e) {
+                message=e.getMessage();
+            }
         }
 
 

@@ -2,63 +2,65 @@ package org.example.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.ui.Model;
-import org.apache.commons.lang3.StringUtils;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 
 
 @Controller
-public class getEmployeeController {
+public class EmployeeController {
 
     Connection conn = null;
     boolean isConnect = false;
 
-    public void ConnectDatabase() {
+    public String getPsw(int psw) {
+
+        psw = psw % 124;
+        return Integer.toString(psw);
+    }
+
+    public void connectDatabase() {
 
         String connectionUrl = "jdbc:mysql://localhost:3306/employees";
-
+        String user = "root";
+        String psw = getPsw(123);
         try {
-            conn = DriverManager.getConnection(connectionUrl, "root", "123");
+            conn = DriverManager.getConnection(connectionUrl, user, psw);
             isConnect = true;
         } catch (SQLException throwables) {
-            throwables.printStackTrace();
             isConnect = false;
         }
 
     }
 
-    @RequestMapping(method = RequestMethod.GET, value = "/employee/search")
+
+    @GetMapping(value = "/employee/search")
 
     @ResponseBody()
     public SearchEmployee searchEmployee(@RequestBody SearchEmployee employee) {
 
         if (!isConnect)
-            ConnectDatabase();
+            connectDatabase();
 
         employee.search(conn);
 
-      return employee;
+        return employee;
     }
 
 
-    @RequestMapping(method = RequestMethod.POST, value = "/employee/search")
+    @PostMapping(value = "/employee/search")
 
     @ResponseBody()
     public String registerEmployee(@RequestBody RegisterEmployee employee) {
 
         if (!isConnect)
-            ConnectDatabase();
+            connectDatabase();
 
         employee.register(conn);
 
-        return employee._getAddingMessage();
+        return employee.alertRegisterMesage();
     }
-
 
 
 }
