@@ -1,5 +1,9 @@
 package org.example.controller;
 
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SparkSession;
+
 import java.sql.*;
 import java.sql.Date;
 import java.util.ArrayList;
@@ -59,7 +63,7 @@ public class SearchEmployee {
         String query = "SELECT e.emp_no,t.title,t.from_date,t.to_date\n" +
                 "FROM employees e join titles t on e.emp_no=t.emp_no\n" +
                 "where e.emp_no=?" +
-                " and t.from_date >=?"  +
+                " and t.from_date >=?" +
                 " and t.to_date<=?";
 
         PreparedStatement ps = null;
@@ -90,19 +94,59 @@ public class SearchEmployee {
             // handle the exception
         } finally {
             try {
-               if(ps !=null) ps.close();
+                if (ps != null) ps.close();
             } catch (SQLException e) {
-                message=e.getMessage();
+                message = e.getMessage();
             }
 
             try {
-               if(rs!=null) rs.close();
+                if (rs != null) rs.close();
             } catch (SQLException e) {
-                message=e.getMessage();
+                message = e.getMessage();
             }
         }
 
 
     }
 
+    public void searchWithSpark(SparkSession spark) {
+
+
+        String sql = String.format("(SELECT e.emp_no,t.title,t.from_date,t.to_date\n" +
+                "FROM employees e join titles t on e.emp_no=t.emp_no\n" +
+                "where e.emp_no=%d" +
+                " and t.from_date >= '%s'" +
+                " and t.to_date<= '%s') as employees", personelId, startDate, endDate);
+
+
+        Row[] dataRows = null;
+        try {
+
+            Dataset<Row> dataFrame = spark.sqlContext()
+                    .read()
+                    .format("jdbc")
+                    .option("url", "jdbc:mysql://localhost:3306/employees")
+                    .option("user", "root")
+                    .option("password", "123")
+                    .option("dbtable", sql)
+                    .load();
+
+            dataRows = (Row[]) dataFrame.collect();
+
+            jobs = new ArrayList<>();
+            for (Row row : dataRows) {
+
+                jobs.add(row.get(1).toString());
+            }
+
+            if (!jobs.isEmpty()) {
+                message = "Personel Bulundu";
+            } else
+                message = "Arama kriterlerine uyan bir personel yok";
+
+        } catch (Exception e) {
+            message = e.getMessage();
+        }
+
+    }
 }

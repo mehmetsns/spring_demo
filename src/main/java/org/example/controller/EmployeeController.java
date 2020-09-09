@@ -1,5 +1,6 @@
 package org.example.controller;
 
+import org.apache.spark.sql.SparkSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,6 +14,14 @@ public class EmployeeController {
 
     Connection conn = null;
     boolean isConnect = false;
+
+    SparkSession spark = SparkSession
+            .builder()
+            .master("local[*]")
+            .appName("Java Spark SQL basic example")
+            .config("spark.some.config.option", "some-value")
+            .getOrCreate();
+
 
     public String getPsw(int psw) {
 
@@ -49,7 +58,7 @@ public class EmployeeController {
     }
 
 
-    @PostMapping(value = "/employee/search")
+    @PostMapping(value = "/employee/register")
 
     @ResponseBody()
     public String registerEmployee(@RequestBody RegisterEmployee employee) {
@@ -59,9 +68,29 @@ public class EmployeeController {
 
         employee.register(conn);
 
-        return employee.alertRegisterMesage();
+        return employee.alertMessage();
     }
 
+
+    @GetMapping(value = "/employee/search/spark")
+
+    @ResponseBody()
+    public SearchEmployee searchEmployeeSpark(@RequestBody SearchEmployee employee) {
+
+        employee.searchWithSpark(spark);
+
+        return employee;
+    }
+
+    @PostMapping(value = "/employee/register/spark")
+
+    @ResponseBody()
+    public String registerEmployeeSpark(@RequestBody RegisterEmployee employee) {
+
+        employee.registerWithSpark(spark);
+
+        return employee.alertMessage();
+    }
 
 }
 

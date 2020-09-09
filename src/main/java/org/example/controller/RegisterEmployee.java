@@ -1,10 +1,18 @@
 package org.example.controller;
 
+
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.sql.*;
+
+import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
-public class RegisterEmployee {
+public class RegisterEmployee implements Serializable {
 
     int personelId;
     String birthDate;
@@ -12,7 +20,8 @@ public class RegisterEmployee {
     String lastName;
     String gender;
     String hireDate;
-    String addingMessage;
+    String message;
+
 
     public void setPersonelId(int personelId) {
         this.personelId = personelId;
@@ -38,11 +47,37 @@ public class RegisterEmployee {
         this.hireDate = hireDate;
     }
 
-    public String alertRegisterMesage() {
-        return addingMessage;
+    public int getPersonelId() {
+
+        return personelId;
+    }
+
+    public String getBirthDate() {
+        return birthDate;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public String getHireDate() {
+        return hireDate;
+    }
+
+    public String alertMessage() {
+        return message;
     }
 
     public void register(Connection conn) {
+
 
         String query = "insert into employees (emp_no,birth_date,first_name,last_name,gender,hire_date)\n" +
                 "values (?, ?, ?, ?, ?, ?)";
@@ -59,22 +94,54 @@ public class RegisterEmployee {
             ps.setDate(6, java.sql.Date.valueOf(hireDate));
             ps.executeUpdate();
 
-            addingMessage = "Personel başarıyla eklendi";
+            message = "Personel başarıyla eklendi";
 
         } catch (SQLException throwables) {
-            addingMessage = throwables.getMessage();
-        }
+            message = throwables.getMessage();
+        } finally {
 
-        finally{
-
-            if (ps !=null) {
+            if (ps != null) {
                 try {
                     ps.close();
                 } catch (SQLException throwables) {
-                    addingMessage = throwables.getMessage();
+                    message = throwables.getMessage();
                 }
             }
         }
+    }
+
+    public void registerWithSpark(SparkSession spark) {
+
+
+        JavaSparkContext javaSc = new JavaSparkContext(spark.sparkContext());
+
+        List<RegisterEmployee> list = new ArrayList<>();
+        list.add(this);
+
+        JavaRDD<RegisterEmployee> personsRDD = javaSc.parallelize(list, 1);
+        Dataset<Row> personelDf = spark.createDataFrame(personsRDD, RegisterEmployee.class);
+        personelDf = personelDf.withColumnRenamed("personelId", "emp_no")
+                .withColumnRenamed("birthdate", "birth_date")
+                .withColumnRenamed("firstname", "first_name")
+                .withColumnRenamed("lastname", "last_name")
+                .withColumnRenamed("hireDate", "hire_date");
+
+        try {
+            personelDf.write()
+                    .mode(SaveMode.Append)
+                    .format("jdbc")
+                    .option("url", "jdbc:mysql://localhost:3306/employees")
+                    .option("dbtable", "employees")
+                    .option("user", "root")
+                    .option("password", "123")
+                    .save();
+
+            message = "Personel başarıyla eklendi";
+        } catch (Exception e) {
+            message = e.getMessage();
+        }
+
+
     }
 
 }
