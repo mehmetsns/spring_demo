@@ -113,7 +113,7 @@ public class RegisterEmployee implements Serializable {
     public void registerWithSpark(SparkSession spark) {
 
 
-        JavaSparkContext javaSc = new JavaSparkContext(spark.sparkContext());
+        JavaSparkContext javaSc = JavaSparkContext.fromSparkContext(spark.sparkContext());
 
         List<RegisterEmployee> list = new ArrayList<>();
         list.add(this);
@@ -140,7 +140,6 @@ public class RegisterEmployee implements Serializable {
         } catch (Exception e) {
             message = e.getMessage();
         }
-
 
     }
 
