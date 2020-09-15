@@ -1,6 +1,8 @@
 package org.example.controller;
 
 import org.apache.spark.sql.SparkSession;
+import org.example.model.RegisterEmployee;
+import org.example.model.SearchEmployee;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 

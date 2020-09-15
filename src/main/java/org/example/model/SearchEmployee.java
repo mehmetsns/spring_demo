@@ -1,4 +1,4 @@
-package org.example.controller;
+package org.example.model;
 
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
