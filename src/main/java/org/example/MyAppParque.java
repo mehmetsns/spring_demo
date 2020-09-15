@@ -2,37 +2,70 @@ package org.example;
 
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.types.DataTypes;
+
+import java.util.logging.Logger;
+
 
 public class MyAppParque {
 
+
+    private static Logger logger = Logger.getLogger(MyAppParque.class.getName());
+
     public static void main(String[] args) {
+
+
+        long start = System.currentTimeMillis();
 
         PfOperations pfMysql = new PfOperations();
 
-        String dbName = "employees";
-        Dataset<Row> employee = pfMysql.readTableFromMysql(dbName, "dept_manager");
-        employee.createOrReplaceTempView("dept_manager");
+        Dataset<Row> deptManager = pfMysql.readFromParquet("dept_manager.parquet");
+        Dataset<Row> salaries = pfMysql.readFromParquet("salaries.parquet");
 
-        Dataset<Row> salaries = pfMysql.readTableFromMysql(dbName, "salaries");
-        salaries.createOrReplaceTempView("salaries");
 
-        Dataset<Row> titles = pfMysql.readTableFromMysql(dbName, "titles");
-        titles.createOrReplaceTempView("titles");
+        Dataset<Row> joinTable;
+        joinTable = deptManager.join(salaries).where(deptManager.col("emp_no")
+                .equalTo(salaries.col("emp_no")))
+                .drop(salaries.col("emp_no"))
+                .drop(salaries.col("from_date"))
+                .drop(salaries.col("to_date"));
 
-        String query = "SELECT t.title, s.salary,s.from_date,s.to_date\n" +
-                "        FROM dept_manager d join titles t on d.emp_no=t.emp_no\n" +
-                "        join salaries s on s.emp_no=d.emp_no\n" +
-                "        where t.title !='Manager' " +
-                "        order by s.salary desc";
-        Dataset<Row> table = PfOperations.spark.sql(query);
+        logger.info("After join dataFrame Schema");
+        joinTable.printSchema();
 
-        //save table as parquet
-        pfMysql.saveAsParquet(table, "managerWithSalaryHistory.parquet");
+        //table column cast
+        joinTable = joinTable.withColumn("salary", joinTable.col("salary").cast(DataTypes.StringType));
 
-        // read from parquet file
-        //Dataset<Row> table2 = pfMysql.readFromParquet("managerWithSalaryHistory.parquet");
-        //table2.show();
-        pfMysql.close();
+
+        logger.info("After join, salary column cast to String");
+        joinTable.printSchema();
+
+        joinTable.write().parquet("managerJoinSalary.parquet");
+
+
+        //// second way with sql query
+        ////-----------------------------------------------------
+        if (true) {
+            deptManager.createOrReplaceTempView("dept_manager");
+            salaries.createOrReplaceTempView("salaries");
+
+            Dataset<Row> joinTable2 = PfOperations.spark.sql("select * from dept_manager d join salaries s on " +
+                    "s.emp_no = d.emp_no");
+
+            joinTable2 = joinTable2.drop(joinTable2.col("s.emp_no"))
+                    .drop(joinTable2.col("s.from_date"))
+                    .drop(joinTable2.col("s.to_date"));
+
+            joinTable2.show();
+            joinTable2.write().parquet("managerJoinSalary.parquet");
+        }
+        ///--------------------------------------------------------------------------------------------
+
+
+        // some time passes
+        long end = System.currentTimeMillis();
+        String elapsedTime = "Time: " + Long.toString(end - start);
+        logger.info(elapsedTime);
 
     }
 

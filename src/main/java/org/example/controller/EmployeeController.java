@@ -23,6 +23,7 @@ public class EmployeeController {
             .getOrCreate();
 
 
+
     public String getPsw(int psw) {
 
         psw = psw % 124;
@@ -87,7 +88,9 @@ public class EmployeeController {
     @ResponseBody()
     public String registerEmployeeSpark(@RequestBody RegisterEmployee employee) {
 
-        employee.registerWithSpark(spark);
+        spark.sparkContext().setLogLevel("ERROR");
+
+        employee.sendKafka(spark);
 
         return employee.alertMessage();
     }

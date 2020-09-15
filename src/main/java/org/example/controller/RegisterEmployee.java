@@ -4,6 +4,9 @@ package org.example.controller;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.*;
+import org.apache.spark.sql.streaming.StreamingQuery;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructType;
 
 import java.io.Serializable;
 import java.sql.Connection;
@@ -11,6 +14,9 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.apache.spark.sql.functions.from_json;
+import static org.apache.spark.sql.types.DataTypes.*;
 
 public class RegisterEmployee implements Serializable {
 
@@ -140,6 +146,56 @@ public class RegisterEmployee implements Serializable {
         } catch (Exception e) {
             message = e.getMessage();
         }
+
+    }
+
+    public void sendKafka(SparkSession spark) {
+
+
+        JavaSparkContext javaSc = JavaSparkContext.fromSparkContext(spark.sparkContext());
+
+        List<RegisterEmployee> list = new ArrayList<>();
+        list.add(this);
+
+        JavaRDD<RegisterEmployee> personsRDD = javaSc.parallelize(list, 1);
+        Dataset<Row> personelDf = spark.createDataFrame(personsRDD, RegisterEmployee.class);
+        personelDf = personelDf.withColumnRenamed("personelId", "emp_no")
+                .withColumnRenamed("birthdate", "birth_date")
+                .withColumnRenamed("firstname", "first_name")
+                .withColumnRenamed("lastname", "last_name")
+                .withColumnRenamed("hireDate", "hire_date");
+
+        //personelDf.show();
+
+        try {
+
+            Dataset<Row> df = spark
+                    .readStream()
+                    .format("kafka")
+                    .option("kafka.bootstrap.servers", "localhost:9092")
+                    .option("subscribe", "postEmployee")
+                    .load();
+
+
+            boolean s = personelDf.isStreaming();
+
+
+            personelDf.selectExpr("to_json(struct(*)) AS value")
+                    .writeStream()
+                    .format("kafka")
+                    .outputMode("append")
+                    .option("kafka.bootstrap.servers", "localhost:9092")
+                    .option("topic", "postEmployee")
+                    .option("checkpointLocation", "/usr/local/spark/chkpoint/")
+                    .start()
+                    .awaitTermination();
+
+
+            message = "Personel başarıyla eklendi";
+        } catch (Exception e) {
+            message = e.getMessage();
+        }
+
 
     }
 

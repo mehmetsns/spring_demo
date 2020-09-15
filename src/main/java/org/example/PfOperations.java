@@ -13,7 +13,10 @@ public class PfOperations {
             .config("spark.some.config.option", "some-value")
             .getOrCreate();
 
+
+
     public Dataset<Row> readTableFromMysql(String dbName, String tableName) {
+
 
         return spark.sqlContext()
                 .read()
