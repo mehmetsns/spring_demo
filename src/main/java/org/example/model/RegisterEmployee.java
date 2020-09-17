@@ -5,6 +5,7 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.*;
 
+
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -12,7 +13,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.apache.spark.sql.functions.from_json;
 
 public class RegisterEmployee implements Serializable {
 
@@ -165,7 +165,6 @@ public class RegisterEmployee implements Serializable {
 
         try {
 
-
             personelDf.selectExpr("to_json(struct(*)) AS value")
                     .write()
                     .mode(SaveMode.Append)
@@ -178,6 +177,7 @@ public class RegisterEmployee implements Serializable {
 
             message = "Personel başarıyla eklendi";
         } catch (Exception e) {
+            e.printStackTrace(new java.io.PrintStream(System.out));
             message = e.getMessage();
         }
 

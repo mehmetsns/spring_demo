@@ -1,5 +1,6 @@
 package org.example.controller;
 
+
 import org.apache.spark.sql.SparkSession;
 import org.example.model.RegisterEmployee;
 import org.example.model.SearchEmployee;
@@ -14,12 +15,14 @@ import java.sql.SQLException;
 @Controller
 public class EmployeeController {
 
+
+
     Connection conn = null;
     boolean isConnect = false;
 
     SparkSession spark = SparkSession
             .builder()
-            .master("local[*]")
+            .master("local[16]")
             .appName("Java Spark SQL basic example")
             .config("spark.some.config.option", "some-value")
             .getOrCreate();
