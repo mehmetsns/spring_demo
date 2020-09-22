@@ -112,7 +112,7 @@ public class RegisterEmployee implements Serializable {
         }
     }
 
-    public void registerWithSpark(SparkSession spark) {
+    public void registerWithSpark(SparkSession spark,String url,String user, String psw) {
 
 
         JavaSparkContext javaSc = JavaSparkContext.fromSparkContext(spark.sparkContext());
@@ -132,10 +132,10 @@ public class RegisterEmployee implements Serializable {
             personelDf.write()
                     .mode(SaveMode.Append)
                     .format("jdbc")
-                    .option("url", "jdbc:mysql://localhost:3306/employees")
+                    .option("url", url)
                     .option("dbtable", "employees")
-                    .option("user", "root")
-                    .option("password", "123")
+                    .option("user", user)
+                    .option("password", psw)
                     .save();
 
             message = "Personel başarıyla eklendi";

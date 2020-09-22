@@ -1,12 +1,16 @@
 package org.example.controller;
 
 
+import jdk.nashorn.internal.objects.annotations.Constructor;
 import org.apache.spark.sql.SparkSession;
 import org.example.model.RegisterEmployee;
 import org.example.model.SearchEmployee;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.PostConstruct;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -16,30 +20,38 @@ import java.sql.SQLException;
 public class EmployeeController {
 
 
-
-    Connection conn = null;
+    Connection conn;
     boolean isConnect = false;
+    SparkSession spark;
 
-    SparkSession spark = SparkSession
-            .builder()
-            .master("local[16]")
-            .appName("Java Spark SQL basic example")
-            .config("spark.some.config.option", "some-value")
-            .getOrCreate();
+    String connectionUrl;
+    String user;
+    String psw;
 
+    @Autowired
+    private Environment env;
 
+    @PostConstruct
+    public void init() {
 
-    public String getPsw(int psw) {
+        connectionUrl = env.getProperty("spring.datasource.url");
+        user = env.getProperty("spring.datasource.username");
+        psw = env.getProperty("spring.datasource.password");
 
-        psw = psw % 124;
-        return Integer.toString(psw);
+        spark = SparkSession
+                .builder()
+                .master("local[16]")
+                .appName("Java Spark SQL basic example")
+                .config("spark.some.config.option", "some-value")
+                .getOrCreate();
+
+        connectDatabase();
+
     }
 
     public void connectDatabase() {
 
-        String connectionUrl = "jdbc:mysql://localhost:3306/employees";
-        String user = "root";
-        String psw = getPsw(123);
+
         try {
             conn = DriverManager.getConnection(connectionUrl, user, psw);
             isConnect = true;
@@ -83,7 +95,7 @@ public class EmployeeController {
     @ResponseBody()
     public SearchEmployee searchEmployeeSpark(@RequestBody SearchEmployee employee) {
 
-        employee.searchWithSpark(spark);
+        employee.searchWithSpark(spark, connectionUrl, user, psw);
 
         return employee;
     }

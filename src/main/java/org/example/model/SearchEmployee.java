@@ -109,7 +109,7 @@ public class SearchEmployee {
 
     }
 
-    public void searchWithSpark(SparkSession spark) {
+    public void searchWithSpark(SparkSession spark,String url,String user,String psw) {
 
 
         String sql = String.format("(SELECT e.emp_no,t.title,t.from_date,t.to_date\n" +
@@ -125,9 +125,9 @@ public class SearchEmployee {
             Dataset<Row> dataFrame = spark.sqlContext()
                     .read()
                     .format("jdbc")
-                    .option("url", "jdbc:mysql://localhost:3306/employees")
-                    .option("user", "root")
-                    .option("password", "123")
+                    .option("url", url)
+                    .option("user", user)
+                    .option("password", psw)
                     .option("dbtable", sql)
                     .load();
 
